@@ -175,12 +175,11 @@ const FALLBACK_PLAYERS = [
 ];
 
 const MATCHES = [
- { date: '2026-08-01', label: '2026.08.01. 10:00 – REAC vs BSC' },
-{ date: '2026-08-05', label: '2026.08.05. – Edzőtábor (részlet később)' },
-{ date: '2026-08-15', label: '2026.08.15. 09:00 – Soroksár vs BSC' },
-{ date: '2026-08-19', label: '2026.08.19. 17:00 – Gloriett vs BSC' },
-{ date: '2026-08-22', label: '2026.08.22. 09:00 – BSC vs Budai' },
-
+  { date: '2026-08-01', label: '2026.08.01. 10:00 – REAC vs BSC' },
+  { date: '2026-08-05', label: '2026.08.05. – Edzőtábor (részlet később)' },
+  { date: '2026-08-15', label: '2026.08.15. 09:00 – Soroksár vs BSC' },
+  { date: '2026-08-19', label: '2026.08.19. 17:00 – Gloriett vs BSC' },
+  { date: '2026-08-22', label: '2026.08.22. 09:00 – BSC vs Budai' },
 ];
 
 const DAYS      = ['H','K','Sz','Cs','P','Szo','V'];
@@ -246,6 +245,16 @@ function maturity(p) {
   const age = decimalAge(p.birthdate, p.measured);
   if (!age || !p.standing || !p.sitting || !p.weight) return null;
   const leg = p.standing - p.sitting;
+
+  // Data sanity: the Mirwald estimate is very sensitive to age and leg length,
+  // so flag the common data-entry bugs instead of trusting a wild number.
+  const issues = [];
+  if (leg <= 0)                        issues.push('ülő ≥ álló magasság (fel vannak cserélve?)');
+  if (age < 10 || age > 18)            issues.push(`életkor gyanús (${age.toFixed(1)} év – szül. vagy mérés dátuma?)`);
+  if (p.standing < 120 || p.standing > 200) issues.push(`álló magasság gyanús (${p.standing} – cm?)`);
+  if (p.sitting  < 55  || p.sitting  > 110) issues.push(`ülő magasság gyanús (${p.sitting} – cm?)`);
+  if (p.weight   < 25  || p.weight   > 100) issues.push(`testsúly gyanús (${p.weight} – kg?)`);
+
   const offset = -9.236
     + 0.0002708 * (leg * p.sitting)
     - 0.001663  * (age * leg)
@@ -256,7 +265,7 @@ function maturity(p) {
   if (offset < -1)      { label = 'PHV előtt';         color = '#4488ff'; note = 'Növekedési lökés előtt.'; }
   else if (offset <= 1) { label = 'PHV körül (kritikus)'; color = '#ffc107'; note = 'Aktív növekedési lökés – emelt sérülés- és Osgood-Schlatter-kockázat, óvatos plyometria.'; }
   else                  { label = 'PHV után';          color = '#c8f135'; note = 'A növekedési lökés csúcsán túl.'; }
-  return { age: age.toFixed(1), offset: offset.toFixed(1), phvAge: phvAge.toFixed(1), label, color, note };
+  return { age: age.toFixed(1), leg: Math.round(leg), offset: offset.toFixed(1), phvAge: phvAge.toFixed(1), label, color, note, issues };
 }
 
 // ── Matchday-minus load logic ──────────────────────────────────────────────
@@ -545,7 +554,12 @@ Motiváló, pontos, U15 korosztálynak megfelelő. Magyar nyelven. Markdown form
           <div className="maturity-row">
             <span className="maturity-dot" style={{ background: mat.color }} />
             <span style={{ fontSize: 12, color: mat.color, fontWeight: 500 }}>Biológiai érettség: {mat.label}</span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>(PHV-távolság ~{mat.offset} év)</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>(PHV-táv ~{mat.offset} év · kor {mat.age} · lábhossz {mat.leg} cm)</span>
+          </div>
+        )}
+        {mat && mat.issues.length > 0 && (
+          <div className="info-box amber">
+            ⚠️ <strong>Gyanús mérési adat</strong> – a PHV-becslés emiatt csúszhat: {mat.issues.join('; ')}.
           </div>
         )}
         {player && !mat && (
@@ -648,11 +662,6 @@ Motiváló, pontos, U15 korosztálynak megfelelő. Magyar nyelven. Markdown form
         <input type="text" placeholder="pl. gyorsaság, passzolás, fejelés, robbanékonyság..." value={focus} onChange={e => setFocus(e.target.value)} />
       </div>
 
-      <div className="section">
-        <span className="section-label">Egyéb megjegyzés az edzőnek (opcionális)</span>
-        <textarea placeholder="pl. sérülés leírása, egyéni kérés, múlt heti edzés tapasztalata..." value={notes} onChange={e => setNotes(e.target.value)} />
-      </div>
-
       <button className="submit-btn" onClick={handleGenerate} disabled={loading}>
         {loading ? <><div className="spinner"/><span>Generálás...</span></> : '⚡ EDZÉSTERV GENERÁLÁSA'}
       </button>
@@ -719,7 +728,7 @@ function ResultPage({ data, form, onBack }) {
     form.physio === 'igen' && { label: '🏥 Fizio', cls: 'blue' },
   ].filter(Boolean);
 
-  const rpeHints = { 1:'nagyon könnyű', 3:'könnyű', 5:'közepes', 7:'nehéz', 9:'nagyon nehéz', 10:'maximális' };
+  const rpeHints = { 1:'könnyű', 2:'közepes', 3:'nehéz', 4:'nagyon nehéz' };
 
   return (
     <div className="result-page">
@@ -759,13 +768,13 @@ function ResultPage({ data, form, onBack }) {
           </div>
 
           <div className="field">
-            <label>Mennyire volt megterhelő? (RPE 1–10)</label>
+            <label>Mennyire volt megterhelő?</label>
             <div className="rpe-track">
-              {[1,2,3,4,5,6,7,8,9,10].map(n =>
+              {[1,2,3,4].map(n =>
                 <div key={n} className={`rpe-cell ${rpe===n?'active':''}`} onClick={() => setRpe(n)}>{n}</div>
               )}
             </div>
-            {rpe && <p className="rpe-hint">{rpe} – {rpeHints[rpe] || (rpe < 5 ? 'könnyű' : rpe < 8 ? 'közepes-nehéz' : 'nagyon nehéz')}</p>}
+            {rpe && <p className="rpe-hint">{rpe} – {rpeHints[rpe]}</p>}
           </div>
 
           <div className="field">
