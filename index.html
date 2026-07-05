@@ -8,10 +8,6 @@
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<!-- marked.js – megbízható markdown parser -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<!-- EmailJS – előre betöltve, nem lazy -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -19,60 +15,51 @@
     --border: #222; --border-hover: #333;
     --text: #fff; --text-muted: #666; --text-sub: #999;
     --accent: #c8f135; --accent-dim: rgba(200,241,53,0.15); --accent-border: rgba(200,241,53,0.3);
-    --red: #ff4444; --blue: #4488ff; --orange: #ff8c00;
+    --red: #ff4444; --blue: #4488ff; --amber: #ffc107;
     --radius: 10px; --radius-sm: 6px;
   }
   html, body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
   body {
-    background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
     background-size: 40px 40px;
   }
   #root { min-height: 100vh; }
-
-  /* ── FORM ── */
   .form-page { max-width: 680px; margin: 0 auto; padding: 32px 20px 60px; }
   .header { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
   .header-crest { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; background: #111; padding: 4px; }
-  .header-crest-fb { width: 56px; height: 56px; border-radius: 8px; background: linear-gradient(135deg,#1a3a6e,#0d1f3d); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .header-crest-fallback { width: 56px; height: 56px; border-radius: 8px; background: linear-gradient(135deg,#1a3a6e,#0d1f3d); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
   .header-text h1 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; line-height: 1; }
   .header-text p { color: var(--text-muted); font-size: 13px; margin-top: 3px; }
-
   .section { margin-bottom: 28px; }
   .section-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; display: block; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-
-  select, textarea, input[type="text"] {
+  select, textarea, input[type="text"], input[type="number"] {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px;
     border-radius: var(--radius-sm); padding: 10px 12px; outline: none; transition: border-color 0.2s;
     appearance: none; -webkit-appearance: none;
   }
   select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
-  select:focus, textarea:focus, input[type="text"]:focus { border-color: var(--accent); }
+  select:focus, textarea:focus, input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent); }
   textarea { resize: vertical; min-height: 80px; }
   select option { background: #111; }
-  /* FIX: dátum input fehér szöveg */
   input[type="date"] {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
-    color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px;
-    border-radius: var(--radius-sm); padding: 10px 12px; outline: none;
-    transition: border-color 0.2s; appearance: none; -webkit-appearance: none;
-    color-scheme: dark;
+    color: #ffffff; font-family: 'DM Sans', sans-serif; font-size: 14px;
+    border-radius: var(--radius-sm); padding: 10px 12px; outline: none; transition: border-color 0.2s;
+    appearance: none; -webkit-appearance: none; color-scheme: dark;
   }
   input[type="date"]:focus { border-color: var(--accent); }
   input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-
   .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
   .pill { flex: 1; text-align: center; padding: 9px 12px; border-radius: 100px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; white-space: nowrap; min-width: fit-content; }
   .pill:hover { border-color: var(--border-hover); color: var(--text); }
   .pill.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
-
   .day-grid { display: flex; gap: 8px; flex-wrap: wrap; }
-  .day-btn { padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .day-btn { padding: 8px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 52px; }
   .day-btn:hover { border-color: var(--border-hover); color: var(--text); }
   .day-btn.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
-
+  .day-btn .day-load { font-size: 9px; letter-spacing: 0.5px; opacity: 0.85; }
   .tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .tool-card { padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
   .tool-card:hover { border-color: var(--border-hover); }
@@ -80,13 +67,6 @@
   .tool-card .tool-icon { font-size: 20px; }
   .tool-card .tool-label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
   .tool-card.active .tool-label { color: var(--accent); }
-
-  /* Sérülés típus */
-  .injury-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
-  .injury-btn { padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-size: 13px; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; text-align: center; }
-  .injury-btn:hover { border-color: var(--border-hover); color: var(--text); }
-  .injury-btn.active { border-color: var(--red); background: rgba(255,68,68,0.1); color: var(--red); }
-
   .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .toggle-info { flex: 1; }
   .toggle-info strong { font-size: 14px; font-weight: 500; }
@@ -95,86 +75,80 @@
   .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--text-muted); transition: all 0.2s; }
   .toggle-switch.on { background: var(--accent-dim); border-color: var(--accent); }
   .toggle-switch.on::after { left: 23px; background: var(--accent); }
-
   .fitness-bar { display: flex; gap: 3px; margin-top: 8px; }
   .fitness-seg { height: 4px; flex: 1; border-radius: 2px; background: var(--border); transition: background 0.3s; }
   .fitness-label { font-size: 12px; margin-top: 6px; }
-
   .submit-btn { width: 100%; padding: 16px; border-radius: var(--radius); border: none; background: var(--accent); color: #000; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .submit-btn:hover { background: #d4f745; transform: translateY(-1px); }
   .submit-btn:active { transform: translateY(0); }
   .submit-btn:disabled { background: #333; color: #555; cursor: not-allowed; transform: none; }
-
-  .spinner   { width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.3);   border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; }
-  .spinner-w { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .spinner { width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  .spinner-w { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .banner { font-size: 12px; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; display: flex; align-items: flex-start; gap: 8px; }
-  .banner.yellow { background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.3); color: #ffc800; }
-  .banner.blue   { background: rgba(68,136,255,0.08); border: 1px solid rgba(68,136,255,0.2); color: var(--blue); }
-  .banner.green  { background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); }
-  .banner.grey   { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+  .demo-banner { background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.3); color: #ffc800; font-size: 12px; padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
   .sub-text { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-
-  /* ── RESULT ── */
+  .info-box { border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; margin-top: 8px; }
+  .info-box.blue { background: rgba(68,136,255,0.08); border: 1px solid rgba(68,136,255,0.2); color: var(--blue); }
+  .info-box.grey { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+  .info-box.green { background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--accent); }
+  .info-box.amber { background: rgba(255,193,7,0.08); border: 1px solid rgba(255,193,7,0.3); color: var(--amber); }
+  .maturity-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .maturity-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .result-page { min-height: 100vh; display: flex; flex-direction: column; }
   .result-topbar { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 12px; }
   .topbar-crest { width: 36px; height: 36px; object-fit: contain; }
-  .topbar-crest-fb { width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg,#1a3a6e,#0d1f3d); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .topbar-crest-fallback { width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg,#1a3a6e,#0d1f3d); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .topbar-player { flex: 1; }
   .topbar-player strong { font-size: 15px; font-weight: 600; }
   .topbar-player span { font-size: 12px; color: var(--text-muted); display: block; }
   .topbar-actions { display: flex; gap: 8px; }
   .topbar-btn { padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .topbar-btn:hover { border-color: var(--border-hover); background: var(--surface); }
-
   .result-content { flex: 1; max-width: 760px; margin: 0 auto; padding: 28px 20px 60px; width: 100%; }
-
   .meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
   .chip { padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); color: var(--text-muted); background: var(--surface2); }
   .chip.accent { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
-  .chip.red    { border-color: rgba(255,68,68,0.3);  color: var(--red);  background: rgba(255,68,68,0.08); }
-  .chip.blue   { border-color: rgba(68,136,255,0.3); color: var(--blue); background: rgba(68,136,255,0.08); }
-
-  /* Plan box – marked.js generálja a HTML-t */
+  .chip.red { border-color: rgba(255,68,68,0.3); color: var(--red); background: rgba(255,68,68,0.08); }
+  .chip.blue { border-color: rgba(68,136,255,0.3); color: var(--blue); background: rgba(68,136,255,0.08); }
+  .chip.amber { border-color: rgba(255,193,7,0.3); color: var(--amber); background: rgba(255,193,7,0.08); }
   .plan-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 28px; line-height: 1.75; font-size: 15px; }
-  .plan-box h1,.plan-box h2 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 1px; color: var(--accent); margin: 20px 0 8px; }
-  .plan-box h1 { font-size: 24px; }
-  .plan-box h2 { font-size: 20px; }
+  .plan-box h2 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: var(--accent); margin: 20px 0 8px; }
   .plan-box h2:first-child { margin-top: 0; }
-  .plan-box h3 { font-size: 13px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 6px; }
-  .plan-box ul, .plan-box ol { padding-left: 22px; margin-bottom: 8px; }
+  .plan-box h3 { font-size: 14px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 6px; }
+  .plan-box ul { padding-left: 20px; }
   .plan-box li { margin-bottom: 4px; }
   .plan-box strong { color: var(--accent); }
   .plan-box em { color: var(--text-sub); }
   .plan-box hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
   .plan-box p { margin-bottom: 8px; }
-  .plan-box code { background: #1a1a1a; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
-  .streaming-cursor { display: inline-block; width: 2px; height: 16px; background: var(--accent); animation: blink 1s step-end infinite; vertical-align: middle; margin-left: 2px; }
-  @keyframes blink { 50% { opacity: 0; } }
-
-  /* Email section */
-  .email-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-  .email-section h3 { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; margin-bottom: 4px; }
-  .email-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
-  .upload-area { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; }
-  .upload-area:hover, .upload-area.drag { border-color: var(--accent); background: var(--accent-dim); }
-  .upload-area .upload-icon { font-size: 28px; }
+  .plan-loading { display: flex; align-items: center; gap: 12px; color: var(--text-muted); font-size: 14px; padding: 20px 0; }
+  .submit-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .submit-section h3 { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; margin-bottom: 4px; }
+  .submit-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+  .field { margin-bottom: 16px; }
+  .field > label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block; }
+  .rpe-track { display: flex; gap: 4px; }
+  .rpe-cell { flex: 1; text-align: center; padding: 8px 0; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.12s; }
+  .rpe-cell:hover { border-color: var(--border-hover); color: var(--text); }
+  .rpe-cell.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+  .rpe-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+  .upload-area { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 24px 20px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 12px; }
+  .upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: var(--accent-dim); }
   .upload-area p { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
+  .upload-icon { font-size: 28px; }
   .upload-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .upload-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); }
   .thumb-wrap { position: relative; display: inline-block; }
-  .upload-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); display: block; }
   .thumb-remove { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--red); color: #fff; font-size: 10px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .send-btn { width: 100%; padding: 13px; border-radius: var(--radius-sm); border: none; background: var(--accent); color: #000; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .send-btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; background: var(--accent); color: #000; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
   .send-btn:hover { background: #d4f745; }
   .send-btn:disabled { background: #333; color: #555; cursor: not-allowed; }
   .success-msg { color: var(--accent); font-size: 13px; text-align: center; margin-top: 10px; }
-  .error-msg { color: var(--red); font-size: 12px; margin-top: 10px; line-height: 1.6; background: rgba(255,68,68,0.06); border: 1px solid rgba(255,68,68,0.2); border-radius: var(--radius-sm); padding: 10px 14px; }
-  .error-msg code { background: rgba(255,68,68,0.15); padding: 1px 5px; border-radius: 3px; }
-
-  @media (max-width: 480px) { .tool-grid { grid-template-columns: 1fr; } .injury-grid { grid-template-columns: 1fr 1fr; } }
+  .error-msg { color: var(--red); font-size: 12px; text-align: center; margin-top: 10px; line-height: 1.5; }
+  .center-load { max-width: 680px; margin: 0 auto; padding: 80px 20px; text-align: center; color: var(--text-muted); }
+  @media (max-width: 480px) { .tool-grid { grid-template-columns: 1fr; } }
   @media print {
-    .result-topbar, .email-section { display: none !important; }
+    .result-topbar, .submit-section { display: none !important; }
     body { background: white; color: black; }
     .plan-box { border: none; padding: 0; }
   }
@@ -183,52 +157,30 @@
 <body>
 <div id="root"></div>
 <script type="text/babel">
-
 // ═══════════════════════════════════════════════════════════
-// KONFIGURÁCIÓ – csak ezt az 5 sort kell szerkeszteni
+// CONFIG  — no API key here anymore, it lives inside the Apps Script proxy
 // ═══════════════════════════════════════════════════════════
-const ANTHROPIC_API_KEY = '';
-const EMAILJS_SERVICE_ID  = 'service_iuxifrx';
-const EMAILJS_TEMPLATE_ID = 'template_zhxc30e';
-const EMAILJS_PUBLIC_KEY  = 'vExPj0aINTG-U6zOX';
-const FIXED_EMAIL         = 'lehotkabotond@gmail.com';
+// Paste your Apps Script Web App /exec URL here (proxies the AI, logs submissions,
+// AND serves the private player roster so the players Sheet never needs to be public):
+const PROXY_URL = 'https://script.google.com/macros/s/AKfycbyyBC0b90LjFCHRbmq_DqXZwj3fBkb-hZUKb5UBLBa_6O--0sPuCwftELtDpH7fbBUr/exec';
+// The player roster is read by the Apps Script from PLAYERS_SHEET_ID (Script Property),
+// so no Sheet URL is needed here and the kids' data stays private.
 // ═══════════════════════════════════════════════════════════
 
 const CREST_URL = 'https://www.magyarfutball.hu/data/logos/0/0036/logo_0036_02.png';
 
-const PLAYERS = [
-  { name: 'Antal Ábel',             pos: '#6' },
-  { name: 'Azary Barnabás',         pos: '#9' },
-  { name: 'Csányi Csanád',          pos: '#8' },
-  { name: 'Gál Gyula',              pos: 'CB' },
-  { name: 'Galyas Krisztofer',      pos: '#8' },
-  { name: 'Juhász Balázs Dániel',   pos: 'CB' },
-  { name: 'Kende Bertalan',         pos: 'Szélső' },
-  { name: 'Kocsis Dávid',           pos: '#6' },
-  { name: 'Kőrösi Richárd',         pos: '#8/#9/Szélső' },
-  { name: 'Mátyás Albert',          pos: '#8/Szélső' },
-  { name: 'Mészáros Péter',         pos: 'Szélsővédő/#6' },
-  { name: 'Paszternák Simon',       pos: 'GK' },
-  { name: 'Solymosi Benjamin Csaba',pos: 'Szélső' },
-  { name: 'Somogyi Benedek',        pos: 'Szélsővédő' },
-  { name: 'Somogyi Dominik',        pos: 'Szélsővédő' },
-  { name: 'Szántó Zalán',           pos: 'CB' },
-  { name: 'Tóth Márton Szabolcs',   pos: 'GK' },   // FIX: space javítva
-  { name: 'Varga Ádám',             pos: 'Szélsővédő' },
+// Fallback roster used only if the roster can't be loaded (proxy not set up yet).
+const FALLBACK_PLAYERS = [
+  { name: 'teszt', pos: '#6' },
 ];
 
 const MATCHES = [
-  { date: '2026-03-22', label: '2026.03.22. 12:30 – Budaörs vs Kaposvári Rákóczi BFLA' },
-  { date: '2026-03-28', label: '2026.03.28. 10:00 – Gyirmót SE Győr vs Budaörs' },
-  { date: '2026-04-05', label: '2026.04.05. 10:00 – Budaörs vs Kelen BVB' },
-  { date: '2026-04-11', label: '2026.04.11. 11:00 – SC Sopron vs Budaörs' },
-  { date: '2026-04-19', label: '2026.04.19. 13:00 – Budaörs vs Szombathelyi Haladás VSE' },
-  { date: '2026-04-25', label: '2026.04.25. 12:00 – Paksi FC vs Budaörs' },
-  { date: '2026-05-03', label: '2026.05.03. 12:00 – Budaörs vs Carvalho Blause Áporka' },
-  { date: '2026-05-10', label: '2026.05.10. 16:00 – Mészöly Focisuli vs Budaörs' },
-  { date: '2026-05-16', label: '2026.05.16. 15:00 – Budaörs vs Király SE' },
-  { date: '2026-05-23', label: '2026.05.23. – Főnix Gold FC vs Budaörs' },
-  { date: '2026-05-30', label: '2026.05.30. 10:00 – Budaörs vs Junior FC' },
+ { date: '2026-08-01', label: '2026.08.01. 10:00 – REAC vs BSC' },
+{ date: '2026-08-05', label: '2026.08.05. – Edzőtábor (részlet később)' },
+{ date: '2026-08-15', label: '2026.08.15. 09:00 – Soroksár vs BSC' },
+{ date: '2026-08-19', label: '2026.08.19. 17:00 – Gloriett vs BSC' },
+{ date: '2026-08-22', label: '2026.08.22. 09:00 – BSC vs Budai' },
+
 ];
 
 const DAYS      = ['H','K','Sz','Cs','P','Szo','V'];
@@ -243,69 +195,158 @@ const TOOLS = [
   { id: 'kapu',    icon: '🥅', label: 'Kapu elérhető' },
 ];
 
-const INJURY_TYPES = [
-  { id: 'knee',   label: '🦵 Térd' },
-  { id: 'ankle',  label: '🦶 Boka' },
-  { id: 'muscle', label: '💪 Izom' },
-  { id: 'back',   label: '🔙 Hát/Gerinc' },
-  { id: 'shoulder',label: '🙋 Váll/Kar' },
-  { id: 'other',  label: '❓ Egyéb' },
-];
+// ── Player roster (read via the Apps Script proxy from the private Sheet) ───
+// Expected columns (header row, any order, case-insensitive):
+//   name, position, birthdate, sitting_height, standing_height, weight, measured_at
+function normKey(k) { return String(k || '').trim().toLowerCase().replace(/\s+/g, '_'); }
 
-// ── Helpers ──
+// Turn raw row objects (from the proxy) into the player shape the app uses.
+// The roster Sheet is historical (one row per measurement), so we keep only the
+// most recent measurement per player — same idea as ROW_NUMBER() dedup by date.
+function mapPlayers(rows) {
+  const num = v => { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? null : n; };
+  const str = v => (v == null ? '' : String(v)).trim();
+  const mapped = rows.map(row => {
+    const r = {};
+    Object.keys(row).forEach(k => { r[normKey(k)] = row[k]; });
+    return {
+      name:      str(r.name || r.nev || r.jatekos),
+      pos:       str(r.position || r.poszt || r.pos),
+      birthdate: str(r.birthdate || r.szuletes || r.dob),
+      sitting:   num(r.sitting_height || r.ulomagassag || r.ulo),
+      standing:  num(r.standing_height || r.allomagassag || r.allo || r.magassag),
+      weight:    num(r.weight || r.testsuly || r.suly),
+      measured:  str(r.measured_at || r.meres_datuma || r.datum),
+    };
+  }).filter(p => p.name);
 
-// FIX: locale-alapú dátum – nincs UTC csúszás
-function todayStr() {
-  return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, helyi időzóna
+  // Keep the latest row per player (by measured date; ties/undated -> last row wins).
+  const latest = new Map();
+  for (const p of mapped) {
+    const prev = latest.get(p.name);
+    if (!prev) { latest.set(p.name, p); continue; }
+    const t = Date.parse(p.measured) || 0;
+    const tPrev = Date.parse(prev.measured) || 0;
+    if (t >= tPrev) latest.set(p.name, p);
+  }
+  return Array.from(latest.values()).sort((a, b) => a.name.localeCompare(b.name, 'hu'));
+}
+
+// ── Biological maturity estimate (Mirwald 2002, boys) ──────────────────────
+// Uses sitting/standing height + weight + age to estimate "years from PHV".
+function decimalAge(birthdate, refDate) {
+  if (!birthdate) return null;
+  const b = new Date(birthdate);
+  const ref = refDate ? new Date(refDate) : new Date();
+  if (isNaN(b) || isNaN(ref)) return null;
+  return (ref - b) / (365.25 * 86400000);
+}
+
+function maturity(p) {
+  const age = decimalAge(p.birthdate, p.measured);
+  if (!age || !p.standing || !p.sitting || !p.weight) return null;
+  const leg = p.standing - p.sitting;
+  const offset = -9.236
+    + 0.0002708 * (leg * p.sitting)
+    - 0.001663  * (age * leg)
+    + 0.007216  * (age * p.sitting)
+    + 0.02292   * (p.weight / p.standing * 100);
+  const phvAge = age - offset; // estimated age at peak height velocity
+  let label, color, note;
+  if (offset < -1)      { label = 'PHV előtt';         color = '#4488ff'; note = 'Növekedési lökés előtt.'; }
+  else if (offset <= 1) { label = 'PHV körül (kritikus)'; color = '#ffc107'; note = 'Aktív növekedési lökés – emelt sérülés- és Osgood-Schlatter-kockázat, óvatos plyometria.'; }
+  else                  { label = 'PHV után';          color = '#c8f135'; note = 'A növekedési lökés csúcsán túl.'; }
+  return { age: age.toFixed(1), offset: offset.toFixed(1), phvAge: phvAge.toFixed(1), label, color, note };
+}
+
+// ── Matchday-minus load logic ──────────────────────────────────────────────
+// Maps a training day to an intensity target based on days-to-next-match.
+function dowIndex(jsDay) { return (jsDay + 6) % 7; } // Mon=0 ... Sun=6
+
+function nextDateForDay(dayLetter) {
+  const target = DAYS.indexOf(dayLetter);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const delta = (target - dowIndex(today.getDay()) + 7) % 7;
+  const d = new Date(today); d.setDate(today.getDate() + delta);
+  return d;
+}
+
+function loadForDay(dayLetter, matchDateStr) {
+  const dayDate = nextDateForDay(dayLetter);
+  const match = new Date(matchDateStr); match.setHours(0, 0, 0, 0);
+  const md = Math.round((match - dayDate) / 86400000); // days until match
+  if (md < 0)   return { md, tag: 'MD+',  label: 'Regeneráció',      short: 'REGEN',  color: '#4488ff' };
+  if (md === 0) return { md, tag: 'MD',   label: 'Meccsnap',         short: 'MECCS',  color: '#666'    };
+  if (md === 1) return { md, tag: 'MD-1', label: 'Aktiváló / könnyű', short: 'KÖNNYŰ', color: '#8bc34a' };
+  if (md === 2) return { md, tag: 'MD-2', label: 'Gyorsaság / közepes', short: 'KÖZEP', color: '#ffc107' };
+  if (md === 3) return { md, tag: 'MD-3', label: 'Erő / intenzitás csúcs', short: 'CSÚCS', color: '#ff7043' };
+  return          { md, tag: 'MD-' + md, label: 'Fejlesztő / magasabb terhelés', short: 'FEJL', color: '#c8f135' };
 }
 
 function getNextMatch() {
-  const today = todayStr();
+  const today = new Date().toISOString().slice(0, 10);
   return MATCHES.find(m => m.date >= today) || MATCHES[MATCHES.length - 1];
+}
+function matchDateFromLabel(label) {
+  const m = MATCHES.find(x => x.label === label);
+  return m ? m.date : getNextMatch().date;
 }
 
 function calcFitness(d) {
   if (!d) return null;
   const days = Math.floor((new Date() - new Date(d)) / 86400000);
-  if (days <= 3)  return { label: 'Kiváló',      color: '#c8f135', segs: 5 };
-  if (days <= 7)  return { label: 'Jó',           color: '#8bc34a', segs: 4 };
-  if (days <= 14) return { label: 'Közepes',      color: '#ffc107', segs: 3 };
-  if (days <= 21) return { label: 'Gyenge',       color: '#ff7043', segs: 2 };
-  return               { label: 'Nagyon gyenge', color: '#f44336', segs: 1 };
+  if (days <= 3)  return { label: 'Kiváló',       color: '#c8f135', segs: 5 };
+  if (days <= 7)  return { label: 'Jó',            color: '#8bc34a', segs: 4 };
+  if (days <= 14) return { label: 'Közepes',       color: '#ffc107', segs: 3 };
+  if (days <= 21) return { label: 'Gyenge',        color: '#ff7043', segs: 2 };
+  return             { label: 'Nagyon gyenge', color: '#f44336', segs: 1 };
 }
 
-// Tool flags – egységes helyen, nem duplikálva
-function getToolFlags(tools) {
-  return {
-    hasLabda:  tools.includes('labda'),
-    hasKapu:   tools.includes('kapu'),
-    hasPalya:  tools.includes('palya'),
-    hasFutpark:tools.includes('futpark'),
-    hasKondo:  tools.includes('kondo'),
-    hasOtthon: tools.includes('otthon'),
-  };
-}
-
-// Kép tömörítés canvas-szal – max 400px, jpg 0.5 minőség → ~20-40KB
+// Compress an image with canvas — max 500px, jpg 0.55 (~40-70KB).
 function compressImage(dataUrl) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
-      const MAX = 400;
-      const sc = Math.min(1, MAX / Math.max(img.width, img.height));
+      const MAX = 500;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
       const c = document.createElement('canvas');
-      c.width  = Math.round(img.width  * sc);
-      c.height = Math.round(img.height * sc);
+      c.width  = Math.round(img.width  * scale);
+      c.height = Math.round(img.height * scale);
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      resolve(c.toDataURL('image/jpeg', 0.5));
+      resolve(c.toDataURL('image/jpeg', 0.55));
     };
     img.onerror = () => resolve('');
     img.src = dataUrl;
   });
 }
 
-// marked.js konfiguráció
-marked.setOptions({ breaks: true, gfm: true });
+// POST helper to the Apps Script proxy. Uses text/plain body -> no CORS preflight.
+async function callProxy(payload) {
+  const res = await fetch(PROXY_URL, { method: 'POST', body: JSON.stringify(payload) });
+  const raw = await res.text();
+  let data;
+  try { data = JSON.parse(raw); }
+  catch {
+    // Not JSON -> almost always the Google login/HTML page, which means the Web App
+    // deployment access isn't "Anyone", or the /exec URL is wrong/old.
+    throw new Error('A proxy nem JSON-t adott vissza (HTTP ' + res.status + ') – valószínűleg bejelentkezési oldal.');
+  }
+  if (!data.ok) throw new Error(data.error || 'Ismeretlen backend hiba.');
+  return data;
+}
+
+// Turn a raw proxy error into a plain-Hungarian, actionable hint for the UI.
+function proxyHint(msg) {
+  if (/Failed to fetch|NetworkError|CORS/i.test(msg))
+    return 'Nem érhető el a proxy (CORS/hozzáférés). Ellenőrizd: a Telepítés hozzáférése „Bárki", és a PROXY_URL a /exec végű Web App URL.';
+  if (/Ismeretlen művelet/i.test(msg))
+    return 'A proxy fut, de a RÉGI kódot szolgálja ki (nem ismeri a „players" műveletet). Telepíts ÚJ VERZIÓT: Telepítés → Telepítések kezelése → ceruza → Verzió: Új verzió.';
+  if (/PLAYERS_SHEET_ID/i.test(msg))
+    return 'Hiányzik a PLAYERS_SHEET_ID a Script Properties-ben (a névsor-Sheet ID-ja).';
+  if (/nem JSON/i.test(msg))
+    return msg + ' Ellenőrizd, hogy a Telepítés hozzáférése „Bárki".';
+  return msg;
+}
 
 const DEMO_PLAN = `## Személyre szabott heti edzésterv – DEMO
 
@@ -316,181 +357,169 @@ const DEMO_PLAN = `## Személyre szabott heti edzésterv – DEMO
 ### 🔥 Bemelegítés (10 perc)
 - 5 perc könnyű kocogás, majd dinamikus nyújtás
 - Bokaugrás, térdemelés, sarokemelés – 2×10/oldal
-- Törzsrotáció, karkörzés
 
 ### 🏃 Futó / Kardió blokk (20 perc)
-- **Aerob alap:** 3×5 perc könnyű futás (65-70% max HR), 60 mp pihenő körök között
+- **Aerob alap:** 3×5 perc könnyű futás (65-70% max HR), 60 mp pihenő
 - **Sprint sorozat:** 6×30 m teljes intenzitás, 90 mp séta-pihenő
 
 ### 💪 Felsőtest & Törzs erősítés (15 perc)
-- **Fekvőtámasz:** 3×12 (45 mp pihenő) – egyenes törzs végig
+- **Fekvőtámasz:** 3×12 (45 mp pihenő) – tartsd egyenesen a törzset
 - **Plank:** 3×45 mp – ne engedd le a csípőd
-- **Oldalsó plank:** 2×30 mp/oldal
 
 ### ⚽ Labdás technikai munka (15 perc)
 - Falnál: 200 érintéses passzolás, felváltva jobb/bal
-- Cselsorozat: step-over, scissors – 10-10 ismétlés mindkét lábbal
 
 ### 🧘 Levezetés & Nyújtás (10 perc)
 - Statikus nyújtás: combhajlító, vádli, csípőhajlító – 30 mp/pozíció
-- Mélylégzés, relaxáció
 
 ---
 
-*⚠️ Demo mód – állítsd be az Anthropic API kulcsot a valódi generáláshoz.*`;
+*⚠️ Demo mód – állítsd be a PROXY_URL-t a valódi generáláshoz.*`;
 
-// ── Prompt builder ──
-function buildPrompt(form, pl, daysText, toolsText) {
-  const { hasLabda, hasKapu } = getToolFlags(form.tools);
-  const injuryLabel = form.injuryType
-    ? INJURY_TYPES.find(t => t.id === form.injuryType)?.label || form.injuryType
-    : '–';
-
-  return `Te egy profi U15-ös futballisták felkészítésére szakosodott sport-fiziológus és erő-kondicionáló edző vagy. Személyre szabott heti edzéstervet készítesz egy U15-ös játékosnak, aki nem tud részt venni a csapatedzésen.
-
-JÁTÉKOS ADATOK:
-- Neve: ${form.player} | Posztja: ${pl?.pos || '–'}
-- Hiányzás oka: ${form.reason}
-- Sérülés típusa: ${form.reason === 'Sérülés' ? injuryLabel : 'Nem releváns'}
-- Fizioterapeuta: ${form.reason === 'Sérülés' ? (form.physio === 'igen' ? `Igen – kapott program: "${form.physioDesc || 'nincs részletezve'}"` : 'Nem volt') : 'Nem releváns'}
-- Utolsó csapatedzés: ${form.lastTraining || 'nem adta meg'} | Fittségi szint: ${calcFitness(form.lastTraining)?.label || 'ismeretlen'}
-- Osgood-Schlatter: ${form.schlatter ? 'IGEN – TILOS: mély guggolás, box-jump, nagy ugrások, erős quadriceps terhelés' : 'Nem'}
-- Következő meccs: ${form.nextMatch}
-- Edzésnapok: ${daysText}
-- Elérhető eszközök/helyszín: ${toolsText}
-${form.focus ? `- Fejlesztési fókusz: ${form.focus}` : ''}
-${form.notes ? `- Megjegyzés az edzőtől: ${form.notes}` : ''}
-
-SZIGORÚ SZABÁLYOK – KÖTELEZŐ BETARTANI:
-${hasLabda
-  ? '✅ LABDA VAN – MINDEN edzésen KIZÁRÓLAG labdás technikai munkát adj a 4. blokkba! Labda nélküli koordináció TILOS ebben a blokkban!'
-  : '❌ NINCS LABDA – TILOS bármilyen labdás feladatot írni! 4. blokkban: koordináció, agilitás, futólépés-technika, egyensúly.'}
-${hasKapu ? '✅ KAPU VAN – adj befejező és lövési gyakorlatokat a technikai blokkba!' : ''}
-${form.schlatter ? '🚨 SCHLATTER PROTOKOLL – TILOS: mély guggolás, jumping squat, box-jump, magas ugrások. SZABAD: hip hinge, kisebb amplitúdójú mozgások, gluteus/hamstring fókusz.' : ''}
-${form.reason === 'Sérülés' ? `🤕 SÉRÜLÉS (${injuryLabel}) – Légy óvatos, kerüld az érintett területet terhelő gyakorlatokat. ${form.physio === 'igen' && form.physioDesc ? `Fizio program: ${form.physioDesc}` : ''}` : ''}
-
-KÖTELEZŐ STRUKTÚRA minden napra (ebben a sorrendben):
-## [NAP NEVE]
-### 🔥 Bemelegítés (8-12 perc)
-### 🏃 Futó / Kardió blokk (15-25 perc) – fittségi szinthez igazítva
-### 💪 Felsőtest & Törzs erősítés (12-20 perc)
-### ${hasLabda ? '⚽ Labdás technikai munka' : '🎯 Koordináció & Agilitás'} (15-20 perc)
-### 🧘 Levezetés & Nyújtás (8-10 perc)
-
-Minden gyakorlathoz: sorozat × ismétlés/időtartam, pihenőidő, 1-2 mondatos végrehajtási tipp.
-Motiváló, konkrét, U15 korosztálynak megfelelő. Magyar nyelven. Markdown formátum.`;
+function renderMarkdown(text) {
+  let h = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^## (.+)/gm,'<h2>$1</h2>')
+    .replace(/^### (.+)/gm,'<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/^- (.+)/gm,'<li>$1</li>')
+    .replace(/^---$/gm,'<hr/>')
+    .replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br/>');
+  return `<p>${h}</p>`;
 }
 
-// ══════════════════════════════════════════════════════
-// App
-// ══════════════════════════════════════════════════════
+// ─── App ───
 function App() {
-  const [view,   setView]   = React.useState('form');
-  const [result, setResult] = React.useState(null);
-  const [fd,     setFd]     = React.useState(null);
+  const [view, setView]       = React.useState('form');
+  const [result, setResult]   = React.useState(null);
+  const [fd, setFd]           = React.useState(null);
+  const [players, setPlayers] = React.useState(null);
+  const [rosterError, setRosterError] = React.useState(null);
 
-  // EmailJS előtöltés – komponens mount-kor, egyszer
   React.useEffect(() => {
-    if (window.emailjs) {
-      window.emailjs.init(EMAILJS_PUBLIC_KEY);
-    }
+    const configured = PROXY_URL && !PROXY_URL.includes('PASTE');
+    if (!configured) { setPlayers(FALLBACK_PLAYERS); return; }
+    callProxy({ action: 'players' })
+      .then(data => {
+        const list = mapPlayers(data.players || []);
+        if (!list.length) throw new Error('A Sheet elérhető, de egy játékost sem találtam – ellenőrizd a fejléc-neveket (name, position, birthdate…) és hogy van adatsor.');
+        setPlayers(list); setRosterError(null);
+      })
+      .catch(err => { console.warn('Játékos-lista betöltés sikertelen:', err.message); setRosterError(proxyHint(err.message)); setPlayers(FALLBACK_PLAYERS); });
   }, []);
 
-  if (view === 'result') {
-    return <ResultPage data={result} form={fd} onBack={() => setView('form')} />;
+  if (players === null) {
+    return <div className="center-load"><div className="spinner-w" style={{ margin: '0 auto 14px' }}/>Játékoslista betöltése…</div>;
   }
-  return (
-    <FormPage
-      onGenerate={(res, f) => { setResult(res); setFd(f); setView('result'); }}
-    />
-  );
+  if (view === 'result') return <ResultPage data={result} form={fd} onBack={() => setView('form')} />;
+  return <FormPage players={players} rosterError={rosterError} onGenerate={(res, f) => { setResult(res); setFd(f); setView('result'); }} />;
 }
 
-// ══════════════════════════════════════════════════════
-// Form Page – unified form state
-// ══════════════════════════════════════════════════════
-const INITIAL_FORM = {
-  player: '', reason: 'Iskola/Családi', lastTraining: '',
-  physio: null, physioDesc: '', injuryType: null,
-  schlatter: false, selectedDays: [], tools: [],
-  nextMatch: getNextMatch().label, focus: '', notes: '',
-};
+// ─── Form Page ───
+function FormPage({ players, rosterError, onGenerate }) {
+  const [player,       setPlayer]       = React.useState('');
+  const [reason,       setReason]       = React.useState('Iskola/Családi');
+  const [lastTraining, setLastTraining] = React.useState('');
+  const [physio,       setPhysio]       = React.useState(null);
+  const [physioDesc,   setPhysioDesc]   = React.useState('');
+  const [schlatter,    setSchlatter]    = React.useState(false);
+  const [selectedDays, setSelectedDays] = React.useState([]);
+  const [tools,        setTools]        = React.useState([]);
+  const [nextMatch,    setNextMatch]    = React.useState(getNextMatch().label);
+  const [focus,        setFocus]        = React.useState('');
+  const [notes,        setNotes]        = React.useState('');
+  const [loading,      setLoading]      = React.useState(false);
+  const [crestErr,     setCrestErr]     = React.useState(false);
 
-function FormPage({ onGenerate }) {
-  const [form, setForm] = React.useState(INITIAL_FORM);
-  const [loading, setLoading]   = React.useState(false);
-  const [crestErr, setCrestErr] = React.useState(false);
+  const pl = players.find(p => p.name === player);
+  const mat = pl ? maturity(pl) : null;
+  const matchDate = matchDateFromLabel(nextMatch);
 
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
-
-  const fitness = calcFitness(form.lastTraining);
+  const fitness = calcFitness(lastTraining);
   const fc = ['#333','#333','#333','#333','#333'];
-  if (fitness) for (let i=0; i<fitness.segs; i++) fc[i] = fitness.color;
+  if (fitness) for (let i = 0; i < fitness.segs; i++) fc[i] = fitness.color;
 
-  const isDemo = !ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY';
-  const { hasLabda } = getToolFlags(form.tools);
+  const isDemo   = !PROXY_URL || PROXY_URL.includes('PASTE');
+  const hasLabda = tools.includes('labda');
+  const hasKapu  = tools.includes('kapu');
 
-  const toggleDay  = d => set('selectedDays', form.selectedDays.includes(d) ? form.selectedDays.filter(x=>x!==d) : [...form.selectedDays, d]);
-  const toggleTool = t => set('tools', form.tools.includes(t) ? form.tools.filter(x=>x!==t) : [...form.tools, t]);
+  const toggleDay  = d => setSelectedDays(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
+  const toggleTool = t => setTools(p => p.includes(t) ? p.filter(x => x !== t) : [...p, t]);
+
+  const buildPrompt = (daysBlock, toolsText) => `Te egy profi U15-ös futballisták felkészítésére szakosodott sport-fiziológus és erő-kondicionáló edző vagy. Személyre szabott heti edzéstervet készítesz egy U15-ös játékosnak, aki nem tud részt venni a csapatedzésen.
+
+JÁTÉKOS ADATOK:
+- Neve: ${player} | Posztja: ${pl?.pos || '–'}
+- Hiányzás oka: ${reason}
+- Utolsó csapatedzés: ${lastTraining || 'nem adta meg'} | Fittségi szint: ${fitness?.label || 'ismeretlen'}
+${mat ? `- Biológiai érettség (becslés): ${mat.label} | PHV-távolság: ${mat.offset} év | becsült életkor: ${mat.age} év
+  → ${mat.note}` : '- Biológiai érettség: nincs elég mérési adat'}
+- Fizioterapeuta: ${reason === 'Sérülés' ? (physio === 'igen' ? `Igen – program: "${physioDesc || 'nincs részletezve'}"` : 'Nem volt') : 'Nem releváns'}
+- Osgood-Schlatter: ${schlatter ? 'IGEN – TILOS: mély guggolás, box-jump, nagy ugrások, erős quadriceps terhelés' : 'Nem'}
+- Következő meccs: ${nextMatch}
+${focus ? `- Fejlesztési fókusz ezen a héten: ${focus}` : ''}
+${notes ? `- Edző megjegyzése: ${notes}` : ''}
+
+NAPI TERHELÉS-VEZÉRLÉS (matchday-minus – KÖTELEZŐ betartani napról napra):
+${daysBlock}
+- Elérhető eszközök/helyszín: ${toolsText}
+
+SZIGORÚ SZABÁLYOK – EZEKET KÖTELEZŐ BETARTANI:
+${hasLabda
+  ? '✅ LABDA VAN – MINDEN edzésen KIZÁRÓLAG labdás technikai munkát adj a technikai blokkba! Labda nélküli koordináció TILOS!'
+  : '❌ NINCS LABDA – TILOS labdás feladatot írni! Helyette: koordináció, agilitás, futólépés-technika, egyensúly.'}
+${hasKapu ? '✅ KAPU VAN – adj befejező/lövési gyakorlatokat is a technikai blokkba!' : ''}
+${schlatter ? '🚨 SCHLATTER PROTOKOLL KÖTELEZŐ – TILOS: mély guggolás, jumping squat, box-jump, magas ugrások. SZABAD: hip hinge, kisebb amplitúdójú mozgások, gluteus/hamstring fókusz.' : ''}
+${mat && mat.offset > -1 && mat.offset < 1 ? '🚨 A JÁTÉKOS AKTÍV NÖVEKEDÉSI LÖKÉSBEN VAN – csökkentsd a plyometriát és a nagy ütődéses feladatokat, tedd hangsúlyossá a mozgásmintát és a mobilitást.' : ''}
+
+KÖTELEZŐ STRUKTÚRA – minden napra pontosan ebben a sorrendben, a napi terhelés-célhoz igazítva:
+1. ## [NAP NEVE] — [terhelés-cél a fenti listából]
+2. ### 🔥 Bemelegítés (8-12 perc)
+3. ### 🏃 Futó / Kardió blokk (15-25 perc) – fittségi szinthez ÉS napi terheléshez igazítva
+4. ### 💪 Felsőtest & Törzs erősítés (12-20 perc)
+5. ### ${hasLabda ? '⚽ Labdás technikai munka' : '🎯 Koordináció & Agilitás'} (15-20 perc)
+6. ### 🧘 Levezetés & Nyújtás (8-10 perc)
+
+Minden gyakorlatnál add meg: sorozat × ismétlés / időtartam, pihenőidő, 1-2 mondatos végrehajtási kulcspont.
+Motiváló, pontos, U15 korosztálynak megfelelő. Magyar nyelven. Markdown formátum.`;
 
   const handleGenerate = async () => {
-    if (!form.player) return alert('Válassz játékost!');
-    if (form.selectedDays.length === 0) return alert('Válassz legalább egy edzésnapot!');
+    if (!player) return alert('Válassz játékost!');
+    if (selectedDays.length === 0) return alert('Válassz legalább egy edzésnapot!');
     setLoading(true);
 
-    const pl        = PLAYERS.find(p => p.name === form.player);
-    const daysText  = form.selectedDays.map(d => DAY_NAMES[DAYS.indexOf(d)]).join(', ');
-    const toolsText = form.tools.length ? form.tools.map(t => TOOLS.find(x=>x.id===t)?.label).join(', ') : 'Nincs meghatározva';
-    const formSnap  = { ...form };
+    const dayLoads = selectedDays.map(d => {
+      const l = loadForDay(d, matchDate);
+      return { d, name: DAY_NAMES[DAYS.indexOf(d)], ...l };
+    });
+    const daysBlock = dayLoads
+      .map(x => `- ${x.name} (${x.tag}): ${x.label}`)
+      .join('\n');
+    const daysText = dayLoads.map(x => `${x.name} (${x.tag})`).join(', ');
+    const toolsText = tools.length ? tools.map(t => TOOLS.find(x => x.id === t)?.label).join(', ') : 'Nincs meghatározva';
+    const formObj = { player, pl, reason, fitness, mat, daysText, dayLoads, toolsText, focus, schlatter, physio, nextMatch, selectedDays };
 
     if (isDemo) {
-      setTimeout(() => {
-        setLoading(false);
-        onGenerate({ text: DEMO_PLAN, isDemo: true }, { ...formSnap, pl, daysText, toolsText, fitness });
-      }, 1200);
+      setTimeout(() => { setLoading(false); onGenerate({ text: DEMO_PLAN, isDemo: true }, formObj); }, 1000);
       return;
     }
-
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
-          stream: true,
-          messages: [{ role: 'user', content: buildPrompt(formSnap, pl, daysText, toolsText) }],
-        }),
-      });
-
-      // FIX: HTTP hiba kezelés streaming előtt
-      if (!res.ok) {
-        const errTxt = await res.text();
-        throw new Error(`API hiba ${res.status}: ${errTxt}`);
-      }
-
+      const data = await callProxy({ action: 'generate', prompt: buildPrompt(daysBlock, toolsText) });
       setLoading(false);
-      onGenerate(
-        { stream: res, isDemo: false },
-        { ...formSnap, pl, daysText, toolsText, fitness }
-      );
-    } catch(e) {
+      onGenerate({ text: data.text, isDemo: false }, formObj);
+    } catch (e) {
       setLoading(false);
-      alert('Hiba: ' + e.message);
+      alert('AI hiba: ' + e.message);
     }
   };
 
   return (
     <div className="form-page">
-      {/* Header */}
       <div className="header">
-        {crestErr
-          ? <div className="header-crest-fb">⚽</div>
+        {crestErr ? <div className="header-crest-fallback">⚽</div>
           : <img className="header-crest" src={CREST_URL} alt="Budaörs" onError={() => setCrestErr(true)} />}
         <div className="header-text">
           <h1>U15 Edzésterv Generátor</h1>
@@ -498,79 +527,70 @@ function FormPage({ onGenerate }) {
         </div>
       </div>
 
-      {isDemo && (
-        <div className="banner yellow">⚠️ <span>Demo mód – állítsd be az <strong>ANTHROPIC_API_KEY</strong> konstanst.</span></div>
+      {isDemo && <div className="demo-banner">⚠️ <span>Demo mód – állítsd be a <strong>PROXY_URL</strong>-t a valódi generáláshoz.</span></div>}
+
+      {!isDemo && rosterError && (
+        <div className="info-box amber" style={{ marginBottom: 16, marginTop: 0 }}>
+          ⚠️ <strong>A játékoslista nem töltődött be</strong> – csak a „teszt" látszik.<br/>{rosterError}
+        </div>
       )}
 
-      {/* Játékos */}
       <div className="section">
         <span className="section-label">Játékos kiválasztása</span>
-        <select value={form.player} onChange={e => set('player', e.target.value)}>
+        <select value={player} onChange={e => setPlayer(e.target.value)}>
           <option value="">– Válassz játékost –</option>
-          {PLAYERS.map(p => <option key={p.name} value={p.name}>{p.name} ({p.pos})</option>)}
+          {players.map(p => <option key={p.name} value={p.name}>{p.name}{p.pos ? ` (${p.pos})` : ''}</option>)}
         </select>
+        {mat && (
+          <div className="maturity-row">
+            <span className="maturity-dot" style={{ background: mat.color }} />
+            <span style={{ fontSize: 12, color: mat.color, fontWeight: 500 }}>Biológiai érettség: {mat.label}</span>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>(PHV-távolság ~{mat.offset} év)</span>
+          </div>
+        )}
+        {player && !mat && (
+          <p className="sub-text">Nincs elég mérési adat a biológiai érettség becsléséhez (kell: születési dátum, ülő- és állómagasság, testsúly).</p>
+        )}
       </div>
 
-      {/* Hiányzás oka */}
       <div className="section">
         <span className="section-label">Hiányzás oka</span>
         <div className="pill-group">
-          {['Iskola/Családi','Sérülés','Egyéb'].map(r => (
-            <button key={r}
-              className={`pill ${form.reason===r?'active':''}`}
-              onClick={() => { set('reason', r); if (r !== 'Sérülés') { set('physio', null); set('injuryType', null); } }}>
-              {r === 'Iskola/Családi' ? '🏫 Iskola / Családi' : r === 'Sérülés' ? '🤕 Sérülés' : 'Egyéb'}
-            </button>
-          ))}
+          <button className={`pill ${reason==='Iskola/Családi'?'active':''}`} onClick={() => { setReason('Iskola/Családi'); setPhysio(null); }}>🏫 Nyaralás / Családi program</button>
+          <button className={`pill ${reason==='Sérülés'?'active':''}`}        onClick={() => setReason('Sérülés')}>🤕 Sérülés</button>
+          <button className={`pill ${reason==='Egyéb'?'active':''}`}          onClick={() => { setReason('Egyéb'); setPhysio(null); }}>Egyéb</button>
         </div>
       </div>
 
-      {/* Sérülés részletek – csak sérülésnél */}
-      {form.reason === 'Sérülés' && (
+      {reason === 'Sérülés' && (
         <div className="section">
-          <span className="section-label">Sérülés típusa</span>
-          <div className="injury-grid">
-            {INJURY_TYPES.map(t => (
-              <button key={t.id}
-                className={`injury-btn ${form.injuryType===t.id?'active':''}`}
-                onClick={() => set('injuryType', t.id)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          <span className="section-label" style={{ marginTop: 14, display: 'block' }}>Volt fizioterapeuta kezelésen?</span>
+          <span className="section-label">Volt fizioterapeuta kezelésen?</span>
           <div className="pill-group">
-            <button className={`pill ${form.physio==='igen'?'active':''}`} onClick={() => set('physio','igen')}>Igen</button>
-            <button className={`pill ${form.physio==='nem'?'active':''}`}  onClick={() => set('physio','nem')}>Nem</button>
+            <button className={`pill ${physio==='igen'?'active':''}`} onClick={() => setPhysio('igen')}>Igen</button>
+            <button className={`pill ${physio==='nem'?'active':''}`}  onClick={() => setPhysio('nem')}>Nem</button>
           </div>
-          {form.physio === 'igen' && (
-            <textarea
-              style={{ marginTop: 10 }}
-              placeholder="Milyen programot / utasítást kapott? (pl. egyensúly-gyakorlatok, kerülendő mozgások, nyújtások...)"
-              value={form.physioDesc}
-              onChange={e => set('physioDesc', e.target.value)}
-            />
+          {physio === 'igen' && (
+            <textarea style={{ marginTop: 10 }}
+              placeholder="Milyen programot / utasítást kapott a fiziotól? (pl. egyensúly-gyakorlatok, kerülendő mozgások, nyújtások...)"
+              value={physioDesc} onChange={e => setPhysioDesc(e.target.value)} />
           )}
-          {form.physio === 'nem' && (
-            <div className="banner blue" style={{ marginTop: 10 }}>ℹ️ Az AI óvatos, sérülés-barát edzéstervet generál. A pontos sérülést az „Egyéb megjegyzés" mezőben részletezheted.</div>
+          {physio === 'nem' && (
+            <div className="info-box blue" style={{ marginTop: 10 }}>ℹ️ Az AI óvatos, sérülés-barát edzéstervet generál. A sérülés típusát az „Egyéb megjegyzés" mezőben pontosíthatod.</div>
           )}
         </div>
       )}
 
-      {/* Következő meccs */}
       <div className="section">
         <span className="section-label">Mikor tud legközelebb játszani?</span>
-        <select value={form.nextMatch} onChange={e => set('nextMatch', e.target.value)}>
+        <select value={nextMatch} onChange={e => setNextMatch(e.target.value)}>
           {MATCHES.map(m => <option key={m.date} value={m.label}>{m.label}</option>)}
         </select>
-        <p className="sub-text">Az AI erre a meccsre optimalizálja a terhelést</p>
+        <p className="sub-text">Az AI erre a meccsre igazítja a napi terhelést (matchday-minus)</p>
       </div>
 
-      {/* Utolsó edzés */}
       <div className="section">
         <span className="section-label">Utolsó csapatedzés dátuma</span>
-        <input type="date" value={form.lastTraining} onChange={e => set('lastTraining', e.target.value)} />
+        <input type="date" value={lastTraining} onChange={e => setLastTraining(e.target.value)} />
         {fitness && (
           <>
             <div className="fitness-bar">{fc.map((c,i) => <div key={i} className="fitness-seg" style={{ background: c }}/>)}</div>
@@ -579,55 +599,58 @@ function FormPage({ onGenerate }) {
         )}
       </div>
 
-      {/* Schlatter */}
       <div className="section">
         <div className="card">
           <div className="toggle-row">
             <div className="toggle-info">
               <strong>Osgood-Schlatter panasz</strong>
-              <p>Ha aktív: az AI kerüli a mély gugolást, nagy ugrásokat és quadriceps terhelést</p>
+              <p>Ha aktív: az AI kerüli a mély guggolást, nagy ugrásokat és erős quadriceps terhelést</p>
             </div>
-            <div className={`toggle-switch ${form.schlatter?'on':''}`} onClick={() => set('schlatter', !form.schlatter)} />
+            <div className={`toggle-switch ${schlatter?'on':''}`} onClick={() => setSchlatter(!schlatter)} />
           </div>
         </div>
       </div>
 
-      {/* Edzésnapok */}
       <div className="section">
-        <span className="section-label">Melyik napokra kér edzést?</span>
+        <span className="section-label">Melyik napokra kér edzést? (a terhelés a meccshez igazodik)</span>
         <div className="day-grid">
-          {DAYS.map(d => (
-            <button key={d} className={`day-btn ${form.selectedDays.includes(d)?'active':''}`} onClick={() => toggleDay(d)}>{d}</button>
-          ))}
+          {DAYS.map(d => {
+            const l = loadForDay(d, matchDate);
+            const active = selectedDays.includes(d);
+            return (
+              <button key={d} className={`day-btn ${active?'active':''}`} onClick={() => toggleDay(d)}>
+                <span>{d}</span>
+                <span className="day-load" style={{ color: active ? undefined : l.color }}>{l.short}</span>
+              </button>
+            );
+          })}
         </div>
+        <p className="sub-text">FEJL = fejlesztő · CSÚCS = erő · KÖZEP = gyorsaság · KÖNNYŰ = aktiváló · MECCS = meccsnap · REGEN = regeneráció</p>
       </div>
 
-      {/* Eszközök */}
       <div className="section">
         <span className="section-label">Elérhető helyszín & eszközök</span>
         <div className="tool-grid">
           {TOOLS.map(t => (
-            <div key={t.id} className={`tool-card ${form.tools.includes(t.id)?'active':''}`} onClick={() => toggleTool(t.id)}>
+            <div key={t.id} className={`tool-card ${tools.includes(t.id)?'active':''}`} onClick={() => toggleTool(t.id)}>
               <span className="tool-icon">{t.icon}</span>
               <span className="tool-label">{t.label}</span>
             </div>
           ))}
         </div>
         {hasLabda
-          ? <div className="banner green" style={{ marginTop: 8 }}>⚽ Labda megjelölve – az AI kizárólag labdás technikai gyakorlatokat generál.</div>
-          : form.tools.length > 0 && <div className="banner grey" style={{ marginTop: 8 }}>Nincs labda – az AI koordinációs és agilitásos feladatokat generál helyette.</div>}
+          ? <div className="info-box green">⚽ Labda megjelölve – az AI kizárólag labdás technikai gyakorlatokat ad, labda nélkülit nem.</div>
+          : tools.length > 0 && <div className="info-box grey">Nincs labda – az AI koordinációs és agilitásos gyakorlatokat generál helyette.</div>}
       </div>
 
-      {/* Fejlesztendő terület */}
       <div className="section">
         <span className="section-label">Fejlesztendő terület ezen a héten (opcionális)</span>
-        <input type="text" placeholder="pl. gyorsaság, passzolás, fejelés, robbanékonyság..." value={form.focus} onChange={e => set('focus', e.target.value)} />
+        <input type="text" placeholder="pl. gyorsaság, passzolás, fejelés, robbanékonyság..." value={focus} onChange={e => setFocus(e.target.value)} />
       </div>
 
-      {/* Megjegyzés */}
       <div className="section">
         <span className="section-label">Egyéb megjegyzés az edzőnek (opcionális)</span>
-        <textarea placeholder="pl. sérülés pontos leírása, egyéni kérés, múlt heti tapasztalat..." value={form.notes} onChange={e => set('notes', e.target.value)} />
+        <textarea placeholder="pl. sérülés leírása, egyéni kérés, múlt heti edzés tapasztalata..." value={notes} onChange={e => setNotes(e.target.value)} />
       </div>
 
       <button className="submit-btn" onClick={handleGenerate} disabled={loading}>
@@ -637,149 +660,75 @@ function FormPage({ onGenerate }) {
   );
 }
 
-// ══════════════════════════════════════════════════════
-// Result Page
-// ══════════════════════════════════════════════════════
+// ─── Result Page ───
 function ResultPage({ data, form, onBack }) {
-  const [planText,   setPlanText]   = React.useState('');
-  const [streaming,  setStreaming]  = React.useState(false);
+  const [planText,   setPlanText]   = React.useState(data.text || '');
   const [images,     setImages]     = React.useState([]);
   const [dragover,   setDragover]   = React.useState(false);
+  const [duration,   setDuration]   = React.useState('');
+  const [rpe,        setRpe]        = React.useState(null);
+  const [pain,       setPain]       = React.useState(false);
+  const [painArea,   setPainArea]   = React.useState('');
+  const [notes,      setNotes]      = React.useState('');
   const [sending,    setSending]    = React.useState(false);
-  const [sendStatus, setSendStatus] = React.useState(null); // null | 'ok' | { err, detail }
+  const [sendStatus, setSendStatus] = React.useState(null);
   const [crestErr,   setCrestErr]   = React.useState(false);
   const fileRef = React.useRef();
-  const planRef = React.useRef('');
 
-  // Streaming
-  React.useEffect(() => {
-    if (data.isDemo) { setPlanText(data.text); return; }
-    if (!data.stream) return;
-    setStreaming(true);
-    (async () => {
-      const reader = data.stream.body.getReader();
-      const dec    = new TextDecoder();
-      let buf = '';
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += dec.decode(value, { stream: true });
-          const lines = buf.split('\n'); buf = lines.pop();
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const raw = line.slice(6).trim();
-            if (raw === '[DONE]') continue;
-            try {
-              const ev = JSON.parse(raw);
-              if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
-                planRef.current += ev.delta.text;
-                setPlanText(planRef.current);
-              }
-            } catch {}
-          }
-        }
-      } finally {
-        setStreaming(false);
-      }
-    })();
-  }, []);
+  const isDemo = !PROXY_URL || PROXY_URL.includes('PASTE');
 
-  const handleFiles = files => {
-    if (images.length >= 3) return;
-    Array.from(files).slice(0, 3 - images.length).forEach(f => {
-      if (!f.type.startsWith('image/')) return;
-      const r = new FileReader();
-      r.onload = e => setImages(p => [...p, { url: e.target.result, name: f.name }]);
-      r.readAsDataURL(f);
-    });
-  };
+  const handleFiles = files => Array.from(files).forEach(f => {
+    if (!f.type.startsWith('image/')) return;
+    const r = new FileReader();
+    r.onload = e => setImages(p => [...p, { url: e.target.result, name: f.name }]);
+    r.readAsDataURL(f);
+  });
+  const removeImage = i => setImages(p => p.filter((_, idx) => idx !== i));
 
-  // ── Email küldés – FONTOS MEGJEGYZÉS ──
-  // Az EmailJS template-ben a változóneveknek PONTOSAN egyezniük kell:
-  //   player_name, player_pos, fitness, days, tools, schlatter,
-  //   physio, next_match, plan_text, image_1, image_2, image_3, to_email
-  // EmailJS → Email Templates → Variables fülön ellenőrizheted
-  const handleSend = async () => {
-    if (!planText) return;
+  const handleSubmit = async () => {
+    if (isDemo) { setSendStatus('err:Demo mód – állítsd be a PROXY_URL-t a beküldéshez.'); return; }
     setSending(true); setSendStatus(null);
     try {
-      if (!window.emailjs) throw new Error('EmailJS SDK nem töltődött be. Internetkapcsolatot ellenőrizd.');
-
-      const compressed = await Promise.all(
-        images.slice(0, 3).map(img => compressImage(img.url))
-      );
-
-      // Payload – max ~50KB legyen összesen
-      const planSlice = planText.slice(0, 4000); // biztonságos limit
-
-      const params = {
-        to_email:    FIXED_EMAIL,
-        player_name: form.player     || '–',
-        player_pos:  form.pl?.pos    || '–',
-        fitness:     form.fitness?.label || '–',
-        days:        form.daysText   || '–',
-        tools:       form.toolsText  || '–',
-        schlatter:   form.schlatter  ? 'Igen' : 'Nem',
-        physio:      form.physio     || '–',
-        next_match:  form.nextMatch  || '–',
-        plan_text:   planSlice,
-        image_1:     compressed[0]  || '',
-        image_2:     compressed[1]  || '',
-        image_3:     compressed[2]  || '',
-      };
-
-      console.log('📧 EmailJS küldés – params kulcsok:', Object.keys(params));
-      console.log('📧 Payload méret ~KB:', Math.round(JSON.stringify(params).length / 1024));
-
-      const result = await window.emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        params
-        // NE add meg a public key-t 4. paraméternek – az init()-ből jön
-      );
-
-      console.log('✅ EmailJS válasz:', result);
-      setSendStatus('ok');
-
-    } catch(e) {
-      console.error('❌ EmailJS FULL ERROR:', e);
-      console.error('   text:', e?.text);
-      console.error('   status:', e?.status);
-      console.error('   message:', e?.message);
-      setSendStatus({
-        err: true,
-        status: e?.status,
-        detail: e?.text || e?.message || JSON.stringify(e),
+      const compressed = await Promise.all(images.slice(0, 3).map(img => compressImage(img.url)));
+      await callProxy({
+        action:      'submit',
+        player:      form.player || '',
+        position:    form.pl?.pos || '',
+        days:        form.daysText || '',
+        next_match:  form.nextMatch || '',
+        duration_min: duration || '',
+        rpe:         rpe || '',
+        pain:        pain,
+        pain_area:   pain ? painArea : '',
+        notes:       notes || '',
+        images:      compressed.filter(Boolean),
       });
+      setSendStatus('ok');
+    } catch (e) {
+      setSendStatus('err:' + (e?.message || 'ismeretlen hiba'));
     }
     setSending(false);
   };
 
   const chips = [
-    { label: form.pl?.pos,           cls: 'accent' },
-    { label: form.fitness?.label,    cls: 'accent' },
-    { label: form.daysText,          cls: '' },
+    { label: form.pl?.pos,        cls: 'accent' },
+    { label: form.fitness?.label, cls: 'accent' },
+    form.mat && { label: `PHV: ${form.mat.label}`, cls: form.mat.offset > -1 && form.mat.offset < 1 ? 'amber' : 'blue' },
+    { label: form.daysText,       cls: '' },
     form.schlatter && { label: '⚠ Schlatter', cls: 'red' },
     form.physio === 'igen' && { label: '🏥 Fizio', cls: 'blue' },
-    { label: form.nextMatch?.split('–')[0]?.trim(), cls: '' },
   ].filter(Boolean);
 
-  const renderedPlan = React.useMemo(() => {
-    if (!planText) return '';
-    try { return marked.parse(planText); }
-    catch { return `<pre>${planText}</pre>`; }
-  }, [planText]);
+  const rpeHints = { 1:'nagyon könnyű', 3:'könnyű', 5:'közepes', 7:'nehéz', 9:'nagyon nehéz', 10:'maximális' };
 
   return (
     <div className="result-page">
       <div className="result-topbar">
-        {crestErr
-          ? <div className="topbar-crest-fb">⚽</div>
+        {crestErr ? <div className="topbar-crest-fallback">⚽</div>
           : <img className="topbar-crest" src={CREST_URL} alt="Budaörs" onError={() => setCrestErr(true)} />}
         <div className="topbar-player">
           <strong>{form.player}</strong>
-          <span>{form.pl?.pos} · {form.fitness?.label || '–'}</span>
+          <span>{form.pl?.pos || '–'} · {form.fitness?.label || '–'}</span>
         </div>
         <div className="topbar-actions">
           <button className="topbar-btn" onClick={() => window.print()}>🖨 Nyomtatás</button>
@@ -788,73 +737,92 @@ function ResultPage({ data, form, onBack }) {
       </div>
 
       <div className="result-content">
-        {data.isDemo && (
-          <div className="banner yellow" style={{ marginBottom: 16 }}>
-            ⚠️ Demo mód – minta edzésterv. Az ANTHROPIC_API_KEY beállítása után valódi tervet generál.
-          </div>
-        )}
+        {data.isDemo && <div className="demo-banner" style={{ marginBottom: 16 }}>⚠️ Demo mód – minta edzésterv. PROXY_URL szükséges a valódihoz.</div>}
 
         <div className="meta-chips">
           {chips.map((c,i) => c.label && <span key={i} className={`chip ${c.cls}`}>{c.label}</span>)}
         </div>
 
         <div className="plan-box">
-          <div dangerouslySetInnerHTML={{ __html: renderedPlan }} />
-          {streaming && <span className="streaming-cursor"/>}
+          {planText
+            ? <div dangerouslySetInnerHTML={{ __html: renderMarkdown(planText) }} />
+            : <div className="plan-loading"><div className="spinner-w"/>Edzésterv készül…</div>}
         </div>
 
-        {/* Email section */}
-        <div className="email-section">
-          <h3>📤 Edzéskép küldése az edzőnek</h3>
-          <p className="email-sub">Az edzésterv és a fotók egyetlen gombnyomással mennek – email cím nem szükséges.</p>
+        <div className="submit-section">
+          <h3>✅ Edzés teljesítve – beküldés az edzőnek</h3>
+          <p className="submit-sub">Ha megcsináltad az edzést, töltsd ki és küldd be. Egyenesen az edző naplójába kerül.</p>
 
-          <div
-            className={`upload-area ${dragover?'drag':''}`}
-            onClick={() => fileRef.current.click()}
-            onDragOver={e => { e.preventDefault(); setDragover(true); }}
-            onDragLeave={() => setDragover(false)}
-            onDrop={e => { e.preventDefault(); setDragover(false); handleFiles(e.dataTransfer.files); }}
-          >
-            <div className="upload-icon">📸</div>
-            <p>Húzd ide a képet, vagy kattints a feltöltéshez</p>
-            <p style={{ fontSize: 11, marginTop: 4 }}>Max 3 kép – automatikusan tömörítve kerül küldésre</p>
+          <div className="field">
+            <label>Időtartam (perc)</label>
+            <input type="number" min="0" placeholder="pl. 60" value={duration} onChange={e => setDuration(e.target.value)} />
           </div>
-          <input ref={fileRef} type="file" accept="image/*" multiple style={{ display:'none' }}
-            onChange={e => handleFiles(e.target.files)} />
 
-          {images.length > 0 && (
-            <div className="upload-previews">
-              {images.map((img,i) => (
-                <div key={i} className="thumb-wrap">
-                  <img className="upload-thumb" src={img.url} alt="" />
-                  <button className="thumb-remove" onClick={() => setImages(p => p.filter((_,idx)=>idx!==i))}>×</button>
-                </div>
-              ))}
+          <div className="field">
+            <label>Mennyire volt megterhelő? (RPE 1–10)</label>
+            <div className="rpe-track">
+              {[1,2,3,4,5,6,7,8,9,10].map(n =>
+                <div key={n} className={`rpe-cell ${rpe===n?'active':''}`} onClick={() => setRpe(n)}>{n}</div>
+              )}
             </div>
-          )}
+            {rpe && <p className="rpe-hint">{rpe} – {rpeHints[rpe] || (rpe < 5 ? 'könnyű' : rpe < 8 ? 'közepes-nehéz' : 'nagyon nehéz')}</p>}
+          </div>
 
-          <button className="send-btn" onClick={handleSend} disabled={sending || !planText}>
+          <div className="field">
+            <div className="card">
+              <div className="toggle-row">
+                <div className="toggle-info">
+                  <strong>Volt fájdalom vagy panasz?</strong>
+                  <p>Pl. térd, boka, izom – fontos a terhelés követéséhez</p>
+                </div>
+                <div className={`toggle-switch ${pain?'on':''}`} onClick={() => setPain(!pain)} />
+              </div>
+            </div>
+            {pain && (
+              <input type="text" style={{ marginTop: 10 }} placeholder="Hol és milyen? (pl. jobb térd, edzés közben)" value={painArea} onChange={e => setPainArea(e.target.value)} />
+            )}
+          </div>
+
+          <div className="field">
+            <label>Megjegyzés (opcionális)</label>
+            <textarea placeholder="Hogyan ment? Mit hagytál ki, ha valamit?" value={notes} onChange={e => setNotes(e.target.value)} />
+          </div>
+
+          <div className="field">
+            <label>Fotó / képernyőkép (opcionális, max 3)</label>
+            <div className={`upload-area ${dragover?'dragover':''}`}
+              onClick={() => fileRef.current.click()}
+              onDragOver={e => { e.preventDefault(); setDragover(true); }}
+              onDragLeave={() => setDragover(false)}
+              onDrop={e => { e.preventDefault(); setDragover(false); handleFiles(e.dataTransfer.files); }}>
+              <div className="upload-icon">📸</div>
+              <p>Húzd ide a képet, vagy kattints a feltöltéshez</p>
+              <p style={{ fontSize: 11, marginTop: 4 }}>Automatikusan tömörítve, a Drive-mappádba mentve</p>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={e => handleFiles(e.target.files)} />
+            {images.length > 0 && (
+              <div className="upload-previews">
+                {images.slice(0,3).map((img,i) => (
+                  <div key={i} className="thumb-wrap">
+                    <img className="upload-thumb" src={img.url} alt="" />
+                    <button className="thumb-remove" onClick={() => removeImage(i)}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button className="send-btn" onClick={handleSubmit} disabled={sending || sendStatus === 'ok'}>
             {sending
               ? <><div className="spinner-w"/><span>Küldés...</span></>
-              : `📧 KÜLDÉS AZ EDZŐNEK${images.length > 0 ? ` (${images.length} kép)` : ''}`}
+              : sendStatus === 'ok' ? '✅ BEKÜLDVE' : `📧 BEKÜLDÉS${images.length > 0 ? ` (${images.length} kép)` : ''}`}
           </button>
 
           {sendStatus === 'ok' && (
-            <p className="success-msg">
-              ✅ Sikeresen elküldve! Az edző megkapta az edzéstervet{images.length > 0 ? ' és a képeket' : ''}.
-            </p>
+            <p className="success-msg">✅ Beküldve! Az edző naplójába bekerült{images.length > 0 ? ' a fotókkal együtt' : ''}.</p>
           )}
-
-          {sendStatus?.err && (
-            <div className="error-msg">
-              <strong>❌ Küldési hiba</strong>{sendStatus.status ? ` (HTTP ${sendStatus.status})` : ''}<br/>
-              <code>{sendStatus.detail}</code><br/><br/>
-              <strong>Ellenőrizd az EmailJS template-ben:</strong><br/>
-              • <strong>To email</strong> mező = <code>{'{{to_email}}'}</code><br/>
-              • Minden változó neve pontosan egyezzen:<br/>
-              &nbsp;&nbsp;<code>{'{{player_name}}'}</code> <code>{'{{plan_text}}'}</code> <code>{'{{days}}'}</code> stb.<br/>
-              • EmailJS → Email Services → Gmail csatlakoztatva van?
-            </div>
+          {sendStatus?.startsWith('err') && (
+            <p className="error-msg">❌ {sendStatus.replace('err:','')}</p>
           )}
         </div>
       </div>
